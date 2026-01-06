@@ -14,7 +14,28 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:scale-105 active:scale-95;
+    background-color: var(--brand-primary, #6366f1) !important;
+    @apply text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:scale-105 active:scale-95;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--brand-primary-hover, #4f46e5) !important;
+    opacity: 0.9;
+  }
+  
+  .brand-primary-text {
+    color: var(--brand-primary, #6366f1) !important;
+  }
+  
+  .brand-primary-bg {
+    background-color: var(--brand-primary, #6366f1) !important;
+  }
+  
+  .brand-primary-bg-light {
+    background-color: var(--brand-primary-light, #e0e7ff) !important;
+  }
+  
+  .brand-primary-border {
+    border-color: var(--brand-primary, #6366f1) !important;
   }
 
   .btn-secondary {
@@ -35,6 +56,20 @@
 }
 
 @layer utilities {
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
@@ -61,6 +96,49 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* react-pdf styles */
+  .react-pdf__Page {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .react-pdf__Page__canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+
+  .react-pdf__Page__textContent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    opacity: 0.2;
+    line-height: 1;
+  }
+
+  .react-pdf__Page__textContent .textLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    color: transparent;
+    font-family: sans-serif;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+  }
+
+  .react-pdf__Page__annotations {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
   }
 }
 

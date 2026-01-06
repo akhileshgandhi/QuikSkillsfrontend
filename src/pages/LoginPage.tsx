@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../utils/api';
 
 interface LoginFormData {
@@ -12,6 +13,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -39,7 +41,11 @@ const LoginPage = () => {
         if (role === 'SUPER_ADMIN') {
           navigate('/dashboard');
         } else if (role === 'TENANT_ADMIN') {
-          navigate('/courses');
+          navigate('/tenant-dashboard');
+        } else if (role === 'MANAGER') {
+          navigate('/manager-dashboard');
+        } else if (role === 'LEARNER') {
+          navigate('/learner/dashboard');
         } else {
           navigate('/courses');
         }
@@ -92,20 +98,34 @@ const LoginPage = () => {
               <label htmlFor="password" className="label-field">
                 Password <span className="text-red-500">*</span>
               </label>
-              <input
-                id="password"
-                type="password"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 6,
-                    message: 'Password must be at least 6 characters',
-                  },
-                })}
-                className="input-field"
-                placeholder="Enter your password"
-                disabled={loading}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password', {
+                    required: 'Password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters',
+                    },
+                  })}
+                  className="input-field pr-10"
+                  placeholder="Enter your password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="error-message">{errors.password.message}</p>
               )}
@@ -154,10 +174,26 @@ const LoginPage = () => {
 
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-xs text-gray-500 text-center">
-              <strong>Demo Credentials:</strong>
-              <br />
-              Super Admin: admin@quikskill.com / Admin@123
+              <strong className="text-gray-700">Demo Credentials:</strong>
             </p>
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                <p className="font-semibold text-blue-900">Super Admin</p>
+                <p className="text-blue-700">admin@quikskill.com / Admin@123</p>
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                <p className="font-semibold text-purple-900">Tenant Admin</p>
+                <p className="text-purple-700">tenantadmin@demo.com / TenantAdmin@123</p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded p-2">
+                <p className="font-semibold text-green-900">Manager</p>
+                <p className="text-green-700">manager@demo.com / Manager@123</p>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                <p className="font-semibold text-orange-900">Learner</p>
+                <p className="text-orange-700">learner@demo.com / Learner@123</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
