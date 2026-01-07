@@ -296,7 +296,7 @@ const LearnerDashboardPage = () => {
     }
   };
 
-  const isOverdue = (dueDate?: string, completionPercentage: number) => {
+  const isOverdue = (dueDate: string | undefined, completionPercentage: number) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date() && completionPercentage < 100;
   };

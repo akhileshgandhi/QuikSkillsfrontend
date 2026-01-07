@@ -535,8 +535,8 @@ const ManagerDashboardPage = () => {
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
-                formatter={(value: any, name: string, props: any) => [
-                  `${value}% (${props.payload.failedAttempts}/${props.payload.totalAttempts} attempts)`,
+                formatter={(value: any, _name?: string, _props?: any) => [
+                  `${value}% (${_props?.payload?.failedAttempts || 0}/${_props?.payload?.totalAttempts || 0} attempts)`,
                   'Failure Rate'
                 ]}
                 labelFormatter={(label, payload: any) => {

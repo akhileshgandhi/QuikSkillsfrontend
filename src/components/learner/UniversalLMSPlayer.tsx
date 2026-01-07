@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import { 
   ArrowLeft, Play, Pause, CheckCircle, Lock, Video, FileText, 
-  Award, Clock, AlertCircle, X, ChevronDown, ChevronRight, Save,
+  Award, AlertCircle, ChevronDown, ChevronRight, Save,
   WifiOff
 } from 'lucide-react';
 import api from '../../utils/api';
@@ -85,13 +85,14 @@ const UniversalLMSPlayer: React.FC = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
+  const [resumeData, setResumeData] = useState<{ lastTime?: number; lastPage?: number } | null>(null);
   
   // Video player state
   const playerRef = useRef<any>(null);
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [seeking, setSeeking] = useState(false);
+  const [seeking] = useState(false);
   
   // SCORM state
   const scormIframeRef = useRef<HTMLIFrameElement>(null);
@@ -160,14 +161,14 @@ const UniversalLMSPlayer: React.FC = () => {
   const setupSCORMAPI = useCallback(() => {
     // SCORM 1.2 API
     (window as any).API = {
-      LMSInitialize: (param: string = '') => {
+      LMSInitialize: (_param: string = '') => {
         scormInitializedRef.current = true;
         scormVersionRef.current = '1.2';
         return 'true';
       },
-      LMSFinish: (param: string = '') => {
+      LMSFinish: (_param: string = '') => {
         if (scormInitializedRef.current) {
-          LMSCommit();
+          commitSCORMData();
           scormInitializedRef.current = false;
         }
         return 'true';
@@ -186,25 +187,25 @@ const UniversalLMSPlayer: React.FC = () => {
         
         return 'true';
       },
-      LMSCommit: (param: string = '') => {
+      LMSCommit: (_param: string = '') => {
         commitSCORMData();
         return 'true';
       },
       LMSGetLastError: () => '0',
-      LMSGetErrorString: (errorCode: string) => '',
-      LMSGetDiagnostic: (errorCode: string) => '',
+      LMSGetErrorString: (_errorCode: string) => '',
+      LMSGetDiagnostic: (_errorCode: string) => '',
     };
 
     // SCORM 2004 API
     (window as any).API_1484_11 = {
-      Initialize: (param: string = '') => {
+      Initialize: (_param: string = '') => {
         scormInitializedRef.current = true;
         scormVersionRef.current = '2004';
         return 'true';
       },
-      Terminate: (param: string = '') => {
+      Terminate: (_param: string = '') => {
         if (scormInitializedRef.current) {
-          Commit('');
+          commitSCORMData();
           scormInitializedRef.current = false;
         }
         return 'true';
@@ -223,13 +224,13 @@ const UniversalLMSPlayer: React.FC = () => {
         
         return 'true';
       },
-      Commit: (param: string = '') => {
+      Commit: (_param: string = '') => {
         commitSCORMData();
         return 'true';
       },
       GetLastError: () => 0,
-      GetErrorString: (errorCode: number) => '',
-      GetDiagnostic: (errorCode: number) => '',
+      GetErrorString: (_errorCode: number) => '',
+      GetDiagnostic: (_errorCode: number) => '',
     };
 
     // Make API available to iframe
@@ -271,7 +272,7 @@ const UniversalLMSPlayer: React.FC = () => {
         setLessonProgress(progressData.lessonProgress);
         
         // Restore SCORM suspend data
-        Object.entries(progressData.lessonProgress).forEach(([lessonId, prog]: [string, any]) => {
+        Object.entries(progressData.lessonProgress).forEach(([_lessonId, prog]: [string, any]) => {
           if (prog.suspendData) {
             scormDataRef.current[`cmi.suspend_data`] = prog.suspendData;
           }
@@ -596,22 +597,6 @@ const UniversalLMSPlayer: React.FC = () => {
     }
   };
 
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPlayed(parseFloat(e.target.value));
-  };
-
-  const handleSeekMouseDown = () => {
-    setSeeking(true);
-  };
-
-  const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
-    setSeeking(false);
-    if (playerRef.current) {
-      const seekTo = parseFloat(e.currentTarget.value);
-      playerRef.current.seekTo(seekTo);
-      showToast('Please watch the full content to proceed.', 'error');
-    }
-  };
 
   const handleSaveAndExit = async () => {
     // Call LMSFinish for SCORM
@@ -640,16 +625,6 @@ const UniversalLMSPlayer: React.FC = () => {
     });
   };
 
-  const loadSCORMPackage = async (contentUrl: string, version?: '1.2' | '2004') => {
-    try {
-      if (contentUrl && scormIframeRef.current) {
-        scormVersionRef.current = version || '1.2';
-        scormIframeRef.current.src = contentUrl;
-      }
-    } catch (error) {
-      console.error('Failed to load SCORM package:', error);
-    }
-  };
 
   if (loading) {
     return (
@@ -688,7 +663,7 @@ const UniversalLMSPlayer: React.FC = () => {
         <InteractiveQuizComponent
           assessmentId={currentLesson.assessmentId}
           courseId={courseId!}
-          onComplete={(result) => {
+          onComplete={() => {
             setShowQuiz(false);
             updateLessonProgress(currentLesson._id || currentLesson.title, {
               completionPercentage: 100,
@@ -873,12 +848,17 @@ const UniversalLMSPlayer: React.FC = () => {
                     )}
                     <ReactPlayer
                       ref={playerRef}
+                      // @ts-ignore - ReactPlayer type definitions issue
                       url={currentLesson.contentUrl}
                       playing={playing && isOnline}
                       controls={false}
                       width="100%"
                       height="100%"
-                      onProgress={handleVideoProgress}
+                      onProgress={(state: any) => {
+                        if (state && typeof state === 'object' && 'played' in state) {
+                          handleVideoProgress(state as { played: number; playedSeconds: number });
+                        }
+                      }}
                       onEnded={handleVideoEnd}
                       onDuration={setDuration}
                       onPlay={() => {
@@ -889,7 +869,7 @@ const UniversalLMSPlayer: React.FC = () => {
                         }
                       }}
                       onPause={() => setPlaying(false)}
-                      onSeek={(seconds) => {
+                      onSeek={(_seconds: number) => {
                         showToast('Please watch the full content to proceed.', 'error');
                         if (playerRef.current) {
                           playerRef.current.seekTo(played);
@@ -910,7 +890,7 @@ const UniversalLMSPlayer: React.FC = () => {
                             onContextMenu: (e: any) => e.preventDefault(),
                           },
                         },
-                      }}
+                      } as any}
                     />
                     {/* Custom Controls Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">

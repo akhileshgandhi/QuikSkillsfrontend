@@ -24,7 +24,7 @@ const PdfProgressViewer: React.FC<PdfProgressViewerProps> = ({
   onComplete,
 }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [viewedPages, setViewedPages] = useState<Set<number>>(new Set([initialPage]));
+  const [, setViewedPages] = useState<Set<number>>(new Set([initialPage]));
   const [progress, setProgress] = useState(0);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -101,7 +101,7 @@ const PdfProgressViewer: React.FC<PdfProgressViewerProps> = ({
       const pages = containerRef.current?.querySelectorAll('.pdf-page-wrapper');
       if (!pages) return;
 
-      const scrollPosition = containerRef.current.scrollTop + 200; // Offset for header
+      const scrollPosition = (containerRef.current?.scrollTop || 0) + 200; // Offset for header
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
@@ -232,7 +232,7 @@ const PdfProgressViewer: React.FC<PdfProgressViewerProps> = ({
               </div>
             }
           >
-            {Array.from(new Array(numPages), (el, index) => (
+            {Array.from(new Array(numPages), (_el, index) => (
               <div
                 key={`page_${index + 1}`}
                 data-page-number={index + 1}

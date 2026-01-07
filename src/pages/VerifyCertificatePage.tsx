@@ -20,7 +20,7 @@ const VerifyCertificatePage = () => {
       setLoading(true);
       setError(null);
       // Use direct fetch for public endpoint (no auth token needed)
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/verify-certificate/${certificateId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/verify-certificate/${certificateId}`);
       const data = await response.json();
       if (data.success) {
         setCertificate(data.data);

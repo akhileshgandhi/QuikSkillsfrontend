@@ -83,10 +83,10 @@ function SortableModule({
     if (!over || active.id === over.id) return;
 
     const oldIndex = module.lessons.findIndex(
-      (l, i) => `lesson-${i}` === active.id,
+      (_l, i) => `lesson-${i}` === active.id,
     );
     const newIndex = module.lessons.findIndex(
-      (l, i) => `lesson-${i}` === over.id,
+      (_l, i) => `lesson-${i}` === over.id,
     );
 
     if (oldIndex !== -1 && newIndex !== -1) {

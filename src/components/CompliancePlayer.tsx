@@ -27,7 +27,7 @@ const CompliancePlayer: React.FC<CompliancePlayerProps> = ({
   const [canProceed, setCanProceed] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [scormStatus, setScormStatus] = useState<string | null>(null);
-  const playerRef = useRef<ReactPlayer>(null);
+  const playerRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const scormAPIRef = useRef<any>(null);
@@ -139,7 +139,7 @@ const CompliancePlayer: React.FC<CompliancePlayerProps> = ({
         LMSGetErrorString: (errorCode: string) => {
           return 'No error';
         },
-        LMSGetDiagnostic: (errorCode: string) => {
+        LMSGetDiagnostic: (_errorCode: string) => {
           return '';
         },
       };
@@ -233,12 +233,17 @@ const CompliancePlayer: React.FC<CompliancePlayerProps> = ({
             controls={false}
             width="100%"
             height="100%"
-            onProgress={handleProgress}
+            onProgress={(state: any) => {
+              if (state && typeof state === 'object' && 'played' in state) {
+                handleProgress(state);
+              }
+            }}
             onDuration={handleDuration}
             onEnded={handleEnded}
             progressInterval={1000}
             config={{
               youtube: {
+                // @ts-ignore - ReactPlayer type definitions
                 playerVars: {
                   controls: 0,
                   disablekb: 1,
@@ -248,6 +253,7 @@ const CompliancePlayer: React.FC<CompliancePlayerProps> = ({
                 },
               },
               vimeo: {
+                // @ts-ignore - ReactPlayer type definitions
                 playerOptions: {
                   controls: false,
                   keyboard: false,

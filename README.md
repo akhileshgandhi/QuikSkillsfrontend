@@ -21,7 +21,7 @@ npm install
 Create a `.env` file:
 
 ```env
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=https://quikskillsbackend.moreyeahs.in
 ```
 
 ## Running the App

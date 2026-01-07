@@ -58,7 +58,7 @@ const ResourceUploader: React.FC<ResourceUploaderProps> = ({
 
       // Use tus-js-client for resumable uploads
       const upload = new tus.Upload(file, {
-        endpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/upload`,
+        endpoint: `${import.meta.env.VITE_API_URL}/upload`,
         retryDelays: [0, 3000, 5000, 10000, 20000],
         metadata: {
           filename: file.name,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Award, Download, Copy, CheckCircle, Calendar, 
-  ExternalLink, ArrowLeft, Share2, Trophy, FileText
+  ExternalLink, ArrowLeft, Share2, Trophy, FileText, AlertCircle
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -80,7 +80,7 @@ const CertificatesPage = () => {
 
       // Create temporary link and trigger download
       const link = document.createElement('a');
-      link.href = downloadUrl;
+      link.href = downloadUrl || '';
       link.download = `${certificate.courseId.title}_Certificate.pdf`;
       link.target = '_blank';
       document.body.appendChild(link);

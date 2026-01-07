@@ -280,7 +280,7 @@ const AuditDashboardPage = () => {
                       endAngle={-270}
                       dataKey="value"
                     >
-                      {gaugeData.map((entry, index) => (
+                      {gaugeData.map((_entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill="#3b82f6"
@@ -288,7 +288,7 @@ const AuditDashboardPage = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number) => `${value.toFixed(1)}%`}
+                      formatter={(value?: number) => `${(value || 0).toFixed(1)}%`}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -326,7 +326,7 @@ const AuditDashboardPage = () => {
               />
               <YAxis label={{ value: 'Storage (MB)', angle: -90, position: 'insideLeft' }} />
               <Tooltip
-                formatter={(value: number) => `${value.toFixed(2)} MB`}
+                formatter={(value?: number) => `${(value || 0).toFixed(2)} MB`}
               />
               <Bar dataKey="storage" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                 {topTenantsData.map((entry, index) => (

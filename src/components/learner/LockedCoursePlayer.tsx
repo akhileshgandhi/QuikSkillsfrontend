@@ -596,7 +596,11 @@ const LockedCoursePlayer: React.FC = () => {
                       controls={false} // Hide default controls to prevent seeking
                       width="100%"
                       height="100%"
-                      onProgress={handleVideoProgress}
+                      onProgress={(state: any) => {
+                        if (state && typeof state === 'object' && 'played' in state) {
+                          handleVideoProgress(state);
+                        }
+                      }}
                       onEnded={handleVideoEnd}
                       onDuration={setDuration}
                       onPlay={() => {
@@ -607,7 +611,7 @@ const LockedCoursePlayer: React.FC = () => {
                         }
                       }}
                       onPause={() => setPlaying(false)}
-                      onSeek={(seconds) => {
+                      onSeek={(_seconds: any) => {
                         // Prevent seeking - show toast
                         showToast('Please watch the full content to proceed.', 'error');
                         // Reset to previous position
@@ -617,7 +621,9 @@ const LockedCoursePlayer: React.FC = () => {
                       }}
                       config={{
                         youtube: {
+                          // @ts-ignore - ReactPlayer type definitions
                           playerVars: {
+                            // @ts-ignore - ReactPlayer type definitions
                             controls: 0, // Hide YouTube controls
                             disablekb: 1, // Disable keyboard controls
                             modestbranding: 1,
