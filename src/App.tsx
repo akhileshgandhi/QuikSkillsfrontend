@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { BrandingProvider } from './contexts/BrandingContext';
 import SuperAdminOnboarding from './pages/SuperAdminOnboarding';
 import LoginPage from './pages/LoginPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import Dashboard from './pages/Dashboard';
 import CoursesPage from './pages/CoursesPage';
 import CourseBuilderPage from './pages/CourseBuilderPage';
@@ -59,6 +60,7 @@ function App() {
       <Router>
         <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/verify-certificate/:certificateId" element={<VerifyCertificatePage />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route
@@ -79,6 +81,7 @@ function App() {
         >
           <Route index element={<Navigate to="/dashboard/organizations" replace />} />
           <Route path="organizations" element={<OrganizationsPage />} />
+          <Route path="users" element={<UserManagementPage />} />
           <Route path="master-library" element={<MasterLibraryPage />} />
           <Route path="master-library/builder" element={<MasterLibraryBuilderPage />} />
           <Route path="certificates" element={<CertificatesPage />} />

@@ -51,9 +51,15 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
     formState: { errors },
     trigger,
     getValues,
+    setValue,
   } = useForm<TenantOnboardingData>({
     defaultValues: {
       storageLimit: 2, // Default 2GB
+      // Ensure billing fields start empty
+      billingFirstName: '',
+      billingMiddleName: '',
+      billingLastName: '',
+      billingAddress: '',
     },
   });
 
@@ -121,24 +127,32 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
     setError(null);
     setProgress(0);
 
+    let progressInterval: NodeJS.Timeout | null = null;
+
     try {
       // Simulate progress updates
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return 90;
           }
           return prev + 10;
         });
       }, 500);
 
+      // Auto-prepend https:// to website if it's missing protocol
+      const processedData = { ...data };
+      if (processedData.website && processedData.website.trim() && !processedData.website.match(/^https?:\/\//i)) {
+        processedData.website = `https://${processedData.website.trim()}`;
+      }
+
       const response = await api.post('/tenants/onboard', {
-        ...data,
-        storageLimit: data.storageLimit || 2,
+        ...processedData,
+        storageLimit: processedData.storageLimit || 2,
       });
 
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setProgress(100);
 
       // Wait a moment to show 100% progress
@@ -146,21 +160,28 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
         onSuccess();
       }, 1000);
     } catch (err: any) {
-      // Handle validation errors
-      if (err.response?.data?.errors) {
-        const validationErrors = err.response.data.errors
-          .map((e: any) => `${e.field}: ${e.message}`)
-          .join(', ');
-        setError(`Validation errors: ${validationErrors}`);
-      } else {
-        setError(
-          err.response?.data?.message ||
-            err.response?.data?.error ||
-            'Failed to onboard tenant. Please check all fields and try again.',
-        );
+      // Clear progress interval if it exists
+      if (progressInterval) {
+        clearInterval(progressInterval);
       }
       setIsSubmitting(false);
       setProgress(0);
+      
+      // Handle validation errors with detailed messages
+      if (err.response?.data?.errors || err.response?.data?.validationErrors) {
+        const validationErrors = (err.response.data.errors || err.response.data.validationErrors || [])
+          .map((e: any) => `• ${e.field}: ${e.message}`)
+          .join('\n');
+        setError(`Validation failed:\n${validationErrors}`);
+      } else if (err.response?.data?.message) {
+        // Use the detailed message from backend
+        setError(err.response.data.message);
+      } else {
+        setError(
+          err.response?.data?.error ||
+            'Failed to onboard tenant. Please check all fields and try again.',
+        );
+      }
     }
   };
 
@@ -418,6 +439,26 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
               </p>
             </div>
 
+            {/* Optional: Copy from Primary Contact */}
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  const primaryContact = getValues();
+                  // Copy primary contact details to billing
+                  setValue('billingFirstName', primaryContact.firstName || '');
+                  setValue('billingMiddleName', primaryContact.middleName || '');
+                  setValue('billingLastName', primaryContact.lastName || '');
+                  // Use organization address as default billing address
+                  setValue('billingAddress', primaryContact.fullAddress || '');
+                }}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium underline"
+                disabled={isSubmitting}
+              >
+                Copy from Primary Contact
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="label-field">
@@ -429,6 +470,7 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
                   })}
                   className="input-field"
                   placeholder="John"
+                  autoComplete="billing given-name"
                   disabled={isSubmitting}
                 />
                 {errors.billingFirstName && (
@@ -442,6 +484,7 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
                   {...register('billingMiddleName')}
                   className="input-field"
                   placeholder="Michael"
+                  autoComplete="billing additional-name"
                   disabled={isSubmitting}
                 />
               </div>
@@ -456,6 +499,7 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
                   })}
                   className="input-field"
                   placeholder="Doe"
+                  autoComplete="billing family-name"
                   disabled={isSubmitting}
                 />
                 {errors.billingLastName && (
@@ -475,6 +519,7 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
                 className="input-field"
                 rows={3}
                 placeholder="123 Billing Street, Suite 200, City, State, ZIP"
+                autoComplete="billing street-address"
                 disabled={isSubmitting}
               />
               {errors.billingAddress && (
@@ -579,7 +624,12 @@ const TenantOnboardingWizard: React.FC<TenantOnboardingWizardProps> = ({
 
           {error && (
             <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-red-800 text-sm font-semibold mb-2">Validation Errors:</p>
+              <div className="text-red-700 text-sm whitespace-pre-line">
+                {error.split('\n').map((line, index) => (
+                  <p key={index} className="mb-1">{line}</p>
+                ))}
+              </div>
             </div>
           )}
 

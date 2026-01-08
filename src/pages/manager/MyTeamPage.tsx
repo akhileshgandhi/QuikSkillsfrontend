@@ -5,6 +5,7 @@ import UserProfileModal from '../../components/manager/UserProfileModal';
 import TeamEnrollmentModal from '../../components/manager/TeamEnrollmentModal';
 import AssessmentAuditModal from '../../components/manager/AssessmentAuditModal';
 import NudgeBulkModal from '../../components/manager/NudgeBulkModal';
+import CongratulateModal from '../../components/manager/CongratulateModal';
 
 interface TeamMember {
   userId: string;
@@ -35,6 +36,7 @@ const MyTeamPage = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [showNudgeModal, setShowNudgeModal] = useState(false);
+  const [showCongratulateModal, setShowCongratulateModal] = useState(false);
   const [activeView, setActiveView] = useState<'overview' | 'courses' | 'assessments' | 'communication'>('overview');
 
   useEffect(() => {
@@ -452,10 +454,7 @@ const MyTeamPage = () => {
                 </div>
               </button>
               <button
-                onClick={() => {
-                  // Navigate to team members and show congratulation options
-                  alert('Congratulate feature - Select team members to congratulate');
-                }}
+                onClick={() => setShowCongratulateModal(true)}
                 className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Award className="w-6 h-6 text-green-600" />
@@ -548,6 +547,23 @@ const MyTeamPage = () => {
           onSuccess={() => {
             loadTeamData();
             setShowNudgeModal(false);
+          }}
+        />
+      )}
+
+      {showCongratulateModal && (
+        <CongratulateModal
+          teamMembers={teamMembers.map(m => ({
+            userId: m.userId,
+            userName: m.userName,
+            email: m.email,
+            completionPercentage: m.completionPercentage,
+            coursesCompleted: m.coursesCompleted,
+          }))}
+          onClose={() => setShowCongratulateModal(false)}
+          onSuccess={() => {
+            loadTeamData();
+            setShowCongratulateModal(false);
           }}
         />
       )}

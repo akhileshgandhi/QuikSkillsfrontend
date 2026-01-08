@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Award, Download, Copy, CheckCircle, Calendar, 
-  ExternalLink, ArrowLeft, Share2, Trophy, FileText, AlertCircle
+  ExternalLink, ArrowLeft, Share2, Trophy, FileText, AlertCircle, X
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -27,6 +27,7 @@ const CertificatesPage = () => {
   const [downloading, setDownloading] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     loadCertificates();
@@ -63,7 +64,11 @@ const CertificatesPage = () => {
 
   const handleDownload = async (certificate: Certificate) => {
     if (!certificate.pdfUrl && !certificate._id) {
-      alert('Certificate download not available');
+      setNotification({
+        type: 'error',
+        message: 'Certificate download not available',
+      });
+      setTimeout(() => setNotification(null), 5000);
       return;
     }
 
@@ -86,9 +91,20 @@ const CertificatesPage = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: `Downloading certificate for ${certificate.courseId.title}...`,
+      });
+      setTimeout(() => setNotification(null), 3000);
     } catch (error: any) {
       console.error('Failed to download certificate:', error);
-      alert('Failed to download certificate. Please try again.');
+      setNotification({
+        type: 'error',
+        message: 'Failed to download certificate. Please try again.',
+      });
+      setTimeout(() => setNotification(null), 5000);
     } finally {
       setDownloading(prev => ({ ...prev, [certificate._id]: false }));
     }
@@ -136,6 +152,32 @@ const CertificatesPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 p-4 rounded-lg shadow-lg ${
+          notification.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-800' 
+            : 'bg-red-50 border border-red-200 text-red-800'
+        } min-w-[300px] max-w-md animate-slide-in`}>
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+            notification.type === 'success' ? 'bg-green-100' : 'bg-red-100'
+          }`}>
+            {notification.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            ) : (
+              <X className="w-5 h-5 text-red-600" />
+            )}
+          </div>
+          <p className="flex-1 text-sm font-medium">{notification.message}</p>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
